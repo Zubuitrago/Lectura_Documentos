@@ -75,7 +75,7 @@ def pagina_2():
         st.markdown(dataframe.head(3).style.hide(axis="index").to_html(), unsafe_allow_html=True)
     st.markdown('***')
 
-    st.title('Seleccione  Zona, Región, Plaza y tienda que corresponde los documento')
+    st.title('Seleccione  Zona, Región, Plaza y Tienda que corresponde los documento')
 ##############################################
     # Seleccionar ZONA#
     zona_options = sorted(dataframe['Zona'].unique())
@@ -162,7 +162,7 @@ def pagina_3():
     st.markdown('***')
 
     # Verificar si seleccion_dataframe no es None
-    if "Documento cargado" in seleccion_dataframe.columns:
+    if "Documento cargado" in seleccion_dataframe.columns and len(seleccion_dataframe["Documento cargado"].unique())!=0 :
         
             # filtrar Dataframe por elemento cargados
         if path_tienda is not None:
@@ -174,26 +174,18 @@ def pagina_3():
                 Fecha=Funciones.buscar_fechas_palabras_clave(text)
                 seleccion_dataframe['Fecha'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),Fecha,seleccion_dataframe["Fecha"])
                 seleccion_dataframe['Contexto'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),asunto,seleccion_dataframe["Contexto"])   
-        seleccion_dataframe['Permisos'] =seleccion_dataframe['Permiso']
-        seleccion_dataframe['Permiso'] =np.where(seleccion_dataframe['Contexto'].notnull(),seleccion_dataframe['Contexto'],seleccion_dataframe['Permiso'])
 
         st.session_state.seleccion_dataframe=seleccion_dataframe
         st.session_state.seleccion_dataframe['Estatus'] =np.where((seleccion_dataframe["Fecha"]=="02 de mayo 2019"),"Caduco",np.where((seleccion_dataframe["Fecha"]=="29/11/2022"),"Vigente",None))
 
         # Transponer el DataFrame
-        st.session_state.seleccion_dataframe_transpuesto = st.session_state.seleccion_dataframe[['Permiso', 'Documento cargado',"Fecha","Estatus"]].transpose()
+        st.session_state.seleccion_dataframe_transpuesto = st.session_state.seleccion_dataframe[['Permiso', 'Documento cargado',"Contexto","Fecha","Estatus"]]
         # Mostrar el DataFrame transpuesto en Streamlit
         st.dataframe(st.session_state.seleccion_dataframe_transpuesto)
     else:
         st.header("Sin Documentos para analizar")
         #st.markdown(seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
         st.dataframe(st.session_state.seleccion_dataframe)
-def pagina_4():
-
-    # Crear un enlace de descarga del DataFrame en formato Excel
-    df = st.session_state.seleccion_dataframe.to_excel(index=False)
-    # Escribir el DataFrame en un archivo Excel
-    df.to_excel('data/result.xlsx')
 
 
 st.sidebar.title('Menú')
