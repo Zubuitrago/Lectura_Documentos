@@ -93,8 +93,8 @@ if 'path_tienda' not in st.session_state:
 if "Documentos" not in st.session_state:
     st.session_state.Documentos = []
 def pagina_2():
-    st.title('Maestro de Documentos Regulatorios por tienda')
-    st.write('Documentos Regulatorios ')
+    st.title('Maestro de Documentos Regulatorios')
+    st.header('Documentos Regulatorios')
 
     if len(dataframe) > 0:
         df_estilo = dataframe.style.applymap(estilo_verde)
@@ -147,7 +147,7 @@ def pagina_2():
             st.session_state.seleccion_dataframe['Documento cargado']=np.where(st.session_state.seleccion_dataframe["Permiso"].isin(st.session_state.Documentos),"Si","No")
             st.header("Documentos a analizar")
             st.markdown(st.session_state.seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-    
+
             st.markdown('***')
 
     else:
@@ -155,7 +155,6 @@ def pagina_2():
         st.write("Selecciones todas las opciones que corresponde a la tienda")
 
 def pagina_3():
-    # En otra página
     selected_options = st.session_state['selected_options']
     option_Zona = selected_options['option_Zona']
     option_Region = selected_options['option_Region']
@@ -168,13 +167,28 @@ def pagina_3():
     Documentos=st.session_state.Documentos
     # dashboard title
     st.title("Resultado de análisis de documentos")
-    # create three columns
-    col1, col2, col3,col4 = st.columns(4)
+    # Definir opciones
 
+    # Crear columnas
+    col1, col2, col3, col4 = st.columns(4)
+
+    # Establecer estilos CSS para centrar el contenido
+    col_styles = '''
+        <style>
+            .stColumn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+        </style>
+    '''
+    st.write(col_styles, unsafe_allow_html=True)
+
+    # Mostrar opciones centradas en cada columna
     with col1:
         st.header("Zona")
         st.write(option_Zona)
-
 
     with col2:
         st.header("Región")
@@ -182,13 +196,13 @@ def pagina_3():
 
     with col3:
         st.header("Plaza")
-        st.write(st.session_state.option_Plaza)
+        st.write(option_Plaza)
+
     with col4:
         st.header("Tienda")
-        st.write(st.session_state.option_Tienda)  
-    #st.header("Documentos a analizar para la tienda ")
-    #st.markdown(seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-    st.markdown('***')
+        st.write(option_Tienda)
+
+    st.markdown("")
 
     # Verificar si seleccion_dataframe no es None
     if "Documento cargado" in seleccion_dataframe.columns and len(seleccion_dataframe["Documento cargado"].unique())!=0 :
@@ -203,18 +217,19 @@ def pagina_3():
                 Fecha=Funciones.buscar_fechas_palabras_clave(text)
                 seleccion_dataframe['Fecha'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),Fecha,seleccion_dataframe["Fecha"])
                 seleccion_dataframe['Contexto'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),asunto,seleccion_dataframe["Contexto"])   
-
+                seleccion_dataframe['Contexto']=seleccion_dataframe['Contexto'].str.replace(r'[^a-zA-Z]', '').str.title()
         st.session_state.seleccion_dataframe=seleccion_dataframe
         st.session_state.seleccion_dataframe['Estatus'] =np.where((seleccion_dataframe["Fecha"]=="02 de mayo 2019"),"Caduco",np.where((seleccion_dataframe["Fecha"]=="29/11/2022"),"Vigente",None))
 
         # Transponer el DataFrame
         st.session_state.seleccion_dataframe_transpuesto = st.session_state.seleccion_dataframe[['Permiso', 'Documento cargado',"Contexto","Fecha","Estatus"]]
         # Mostrar el DataFrame transpuesto en Streamlit
-        st.dataframe(st.session_state.seleccion_dataframe_transpuesto)
+        st.markdown(st.session_state.seleccion_dataframe_transpuesto.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+
     else:
         st.header("Sin Documentos para analizar")
-        #st.markdown(seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-        st.dataframe(st.session_state.seleccion_dataframe)
+        st.markdown(st.session_state.seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+        #st.dataframe(st.session_state.seleccion_dataframe)
 
 
 st.sidebar.title('Menú')
