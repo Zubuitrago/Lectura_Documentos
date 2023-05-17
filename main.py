@@ -29,11 +29,40 @@ def estilo_verde(val):
     return f'background-color: {color}'
 
 def pagina_1():
-    st.image('Banner.png', use_column_width=True)
+    # Leer la imagen como bytes
+    with open('Banner.png', 'rb') as f:
+        image_bytes = f.read()
+
+    # Convertir la imagen a base64
+    image_base64 = base64.b64encode(image_bytes).decode()
+
+
+    # Título justificado
+    st.markdown(
+        """
+        <h1 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 33px;">Herramienta De Identificación Automática De Fechas</h1>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Crear columnas para centrar la imagen
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    # Centrar la imagen en la columna central
+    with col2:
+        st.markdown(
+            f'<div style="display: flex; justify-content: center;"><img src="data:image/png;base64,{image_base64}" style="width:100%;"></div>',
+            unsafe_allow_html=True
+        )
+
+
+    #st.title('Herramienta de identificación automática de fechas.')
+    #st.image('Banner.png', width=650)
+    st.markdown('')
     st.write(
         """
         El objetivo de esta herramienta es simplificar y mejorar la gestión de los documentos reglamentarios necesarios para el funcionamiento de tiendas, brindando una visión clara de las fechas de vencimiento y ayudando a garantizar el cumplimiento de los requisitos legales de manera oportuna y eficiente.
-        """
+        """, font_size=5
     )
 dataframe = pd.read_excel('./data/Documentos regulatorios.xlsx', dtype=str)
 
