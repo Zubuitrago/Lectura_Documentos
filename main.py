@@ -237,11 +237,11 @@ def pagina_3():
         estatus = row['Estatus']
         background_color = ''
         if estatus == 'Caduco':
-            background_color = '#f8a359'
+            background_color = '#FF7F50'
         elif estatus == 'Por Caducar':
             background_color = '#fde686'
         elif estatus == 'Vigente':
-            background_color = '#27ae60'
+            background_color = '#3CB371'
         
         return ['background-color: ' + background_color] * len(row)
 
