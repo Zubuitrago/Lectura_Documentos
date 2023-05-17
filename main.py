@@ -80,7 +80,7 @@ if 'option_Region' not in st.session_state:
 if 'option_Plaza' not in st.session_state:
     st.session_state.option_Plaza = "I"
 if 'option_Tienda' not in st.session_state:
-    st.session_state.option_Tienda = "Tienda 1"
+    st.session_state.option_Tienda = "1A"
 if 'selected_options' not in st.session_state:
     st.session_state['selected_options'] = {
     'option_Zona':  st.session_state.option_Zona ,
@@ -122,7 +122,7 @@ def pagina_2():
         st.session_state.option_Plaza = st.radio("Seleccione la Plaza", plaza_options, key='plaza',horizontal=True)
 
     # Seleccionar Tienda#
-    tienda_options = ("Tienda 1", "Tienda 2", "Tienda 3")
+    tienda_options = ("1A", "2B", "3C")
     st.session_state.option_Tienda = st.radio("Seleccione la Tienda", tienda_options, key='tienda',horizontal=True)
 
     # Guardar las variables seleccionadas en el estado global
@@ -161,7 +161,7 @@ def pagina_3():
     option_Plaza = selected_options['option_Plaza']
     option_Tienda = selected_options['option_Tienda']
     seleccion_dataframe=st.session_state.seleccion_dataframe.reset_index()
-    seleccion_dataframe["Fecha"]=None
+    seleccion_dataframe["Vigencia"]=None
     seleccion_dataframe["Contexto"]=None
     path_tienda=st.session_state.path_tienda 
     Documentos=st.session_state.Documentos
@@ -187,45 +187,55 @@ def pagina_3():
 
     # Mostrar opciones centradas en cada columna
     with col1:
-        st.header("Zona")
-        st.write(option_Zona)
+        #st.header("Zona:")
+        st.header(f"Zona: {option_Zona}")
+
+        #st.header(option_Zona)
+
 
     with col2:
-        st.header("Región")
-        st.write(option_Region)
+        #st.header("Región")
+        #st.header(option_Region)
+        st.header(f"Región: {option_Region}")
 
     with col3:
-        st.header("Plaza")
-        st.write(option_Plaza)
+        #st.header("Plaza")
+        #st.header(option_Plaza)
+        st.header(f"Plaza: {option_Plaza}")
 
     with col4:
-        st.header("Tienda")
-        st.write(option_Tienda)
+        #st.header("Tienda")
+        #st.header(option_Tienda)
+        st.header(f"Tienda: {option_Tienda}")
 
     st.markdown("")
 
+
     # Verificar si seleccion_dataframe no es None
     if "Documento cargado" in seleccion_dataframe.columns and len(seleccion_dataframe["Documento cargado"].unique())!=0 :
-        
             # filtrar Dataframe por elemento cargados
-        if path_tienda is not None:
+        if path_tienda is not None and len(path_tienda)!=0:
             for id,file in enumerate(path_tienda):
             #Lee los datos del archivo
                 text=Funciones.obtener_texto_fecha(file)
                 #st.write("texto",text)
                 asunto=Funciones.obtener_asunto_imagen(text)
                 Fecha=Funciones.buscar_fechas_palabras_clave(text)
-                seleccion_dataframe['Fecha'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),Fecha,seleccion_dataframe["Fecha"])
+                seleccion_dataframe['Vigencia'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),Fecha,seleccion_dataframe["Vigencia"])
                 seleccion_dataframe['Contexto'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),asunto,seleccion_dataframe["Contexto"])   
                 seleccion_dataframe['Contexto']=seleccion_dataframe['Contexto'].str.replace(r'[^a-zA-Z]', '').str.title()
+                
+        else:
+            st.markdown(st.session_state.seleccion_dataframe_transpuesto.style.hide(axis="index").to_html(), unsafe_allow_html=True)
         st.session_state.seleccion_dataframe=seleccion_dataframe
-        st.session_state.seleccion_dataframe['Estatus'] =np.where((seleccion_dataframe["Fecha"]=="02 de mayo 2019"),"Caduco",np.where((seleccion_dataframe["Fecha"]=="29/11/2022"),"Vigente",None))
+        st.session_state.seleccion_dataframe['Estatus'] =np.where((seleccion_dataframe["Vigencia"]=="02 de mayo 2019"),"Caduco",np.where((seleccion_dataframe["Vigencia"]=="29/11/2022"),"Vigente",None))
 
         # Transponer el DataFrame
-        st.session_state.seleccion_dataframe_transpuesto = st.session_state.seleccion_dataframe[['Permiso', 'Documento cargado',"Contexto","Fecha","Estatus"]]
+        st.session_state.seleccion_dataframe_transpuesto = st.session_state.seleccion_dataframe[['Permiso', 'Documento cargado',"Contexto","Vigencia","Estatus"]]
+
         # Mostrar el DataFrame transpuesto en Streamlit
         st.markdown(st.session_state.seleccion_dataframe_transpuesto.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-
+        
     else:
         st.header("Sin Documentos para analizar")
         st.markdown(st.session_state.seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
