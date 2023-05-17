@@ -5,6 +5,7 @@ import streamlit as st
 import os
 import base64
 import Funciones
+from PIL import Image
 
 st.set_page_config(
     page_title="Herramienta de Documentos Regulatorios OXXO.",
@@ -59,12 +60,14 @@ def pagina_1():
     #st.title('Herramienta de identificación automática de fechas.')
     #st.image('Banner.png', width=650)
     st.markdown('')
+    st.markdown('#### Objetivo')
     st.write(
         """
         El objetivo de esta herramienta es simplificar y mejorar la gestión de los documentos reglamentarios necesarios para el funcionamiento de tiendas, brindando una visión clara de las fechas de vencimiento y ayudando a garantizar el cumplimiento de los requisitos legales de manera oportuna y eficiente.
         """, font_size=5
     )
 dataframe = pd.read_excel('./data/Documentos regulatorios.xlsx', dtype=str)
+print(dataframe.head())
 
 # Inicializar el DataFrame global
 if 'seleccion_dataframe' not in st.session_state:
@@ -94,7 +97,7 @@ if "Documentos" not in st.session_state:
     st.session_state.Documentos = []
 def pagina_2():
     st.title('Maestro de Documentos Regulatorios')
-    st.header('Documentos Regulatorios')
+    st.markdown('#### Documentos Regulatorios')
 
     if len(dataframe) > 0:
         df_estilo = dataframe.style.applymap(estilo_verde)
@@ -104,26 +107,31 @@ def pagina_2():
         st.markdown(dataframe.head(3).style.hide(axis="index").to_html(), unsafe_allow_html=True)
     st.markdown('***')
 
-    st.title('Seleccione  Zona, Región, Plaza y Tienda que corresponde los documento')
+    st.markdown('#### Seleccione  Zona, Región, Plaza y Tienda del documento')
 ##############################################
     # Seleccionar ZONA#
     zona_options = sorted(dataframe['Zona'].unique())
-    st.session_state.option_Zona = st.radio("Seleccione la Zona", zona_options, key='zona',horizontal=True)
 
-    # Seleccionar Región#
-    if st.session_state.option_Zona is not None:
-        region_options = sorted(dataframe[dataframe['Zona'] == st.session_state.option_Zona]['Region'].unique())
-        st.session_state.option_Region = st.radio("Seleccione la Región", region_options, key='region',horizontal=True)
+    col1, col2,col3,col4 = st.columns([1.3,1.3,1,1.3])
+    with col1:
+            st.session_state.option_Zona = st.radio('Seleccione la Zona', zona_options, key='zona',horizontal=True)
+            # Set the font size using CSS
+    with col2:
+            if st.session_state.option_Zona is not None:
+                region_options = sorted(dataframe[dataframe['Zona'] == st.session_state.option_Zona]['Region'].unique())
+                st.session_state.option_Region = st.radio("Seleccione la Región", region_options, key='region',horizontal=True)
+    with col3:
+             # Seleccionar Plaza#
+            if st.session_state.option_Region is not None:
+                plaza_options = sorted(dataframe[(dataframe['Zona'] == st.session_state.option_Zona) &
+                                                (dataframe['Region'] == st.session_state.option_Region)]['Plaza'].unique())
+                st.session_state.option_Plaza = st.radio("Seleccione la Plaza", plaza_options, key='plaza',horizontal=True)
+    with col4:
+            # Seleccionar Tienda#
+            tienda_options = ("1A", "2B", "3C")
+            st.session_state.option_Tienda = st.radio("Seleccione la Tienda", tienda_options, key='tienda',horizontal=True)
+    
 
-    # Seleccionar Plaza#
-    if st.session_state.option_Region is not None:
-        plaza_options = sorted(dataframe[(dataframe['Zona'] == st.session_state.option_Zona) &
-                                        (dataframe['Region'] == st.session_state.option_Region)]['Plaza'].unique())
-        st.session_state.option_Plaza = st.radio("Seleccione la Plaza", plaza_options, key='plaza',horizontal=True)
-
-    # Seleccionar Tienda#
-    tienda_options = ("1A", "2B", "3C")
-    st.session_state.option_Tienda = st.radio("Seleccione la Tienda", tienda_options, key='tienda',horizontal=True)
 
     # Guardar las variables seleccionadas en el estado global
     st.session_state['selected_options'] = {
@@ -146,6 +154,7 @@ def pagina_2():
             st.session_state.Documentos = [elemento.split('.')[0] for elemento in archivos]
             st.session_state.seleccion_dataframe['Documento cargado']=np.where(st.session_state.seleccion_dataframe["Permiso"].isin(st.session_state.Documentos),"Si","No")
             st.header("Documentos a analizar")
+            print(st.session_state.seleccion_dataframe)
             st.markdown(st.session_state.seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
 
             st.markdown('***')
@@ -165,83 +174,108 @@ def pagina_3():
     seleccion_dataframe["Contexto"]=None
     path_tienda=st.session_state.path_tienda 
     Documentos=st.session_state.Documentos
+    print(st.session_state.seleccion_dataframe)
     # dashboard title
     st.title("Resultado de análisis de documentos")
     # Definir opciones
 
-    # Crear columnas
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3,col4  = st.columns([0.5,0.5,0.5,0.5])
 
-    # Establecer estilos CSS para centrar el contenido
-    col_styles = '''
+    # Set the content for each column
+    content1 = f"Zona: {option_Zona}"
+    content2 = f"Región: {option_Region}"
+    content3 = f"Plaza: {option_Plaza}"
+    content4 = f"Tienda: {option_Tienda}"
+
+    # Apply CSS styling to center-align the content in each column
+    style = """
         <style>
-            .stColumn {
+            .column-content {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                text-align: center;
+                font-size: 22px;
+                font-weight: bold;
             }
         </style>
-    '''
-    st.write(col_styles, unsafe_allow_html=True)
+    """
+    st.markdown(style, unsafe_allow_html=True)
 
-    # Mostrar opciones centradas en cada columna
-    with col1:
-        #st.header("Zona:")
-        st.header(f"Zona: {option_Zona}")
+    # Display the content in each column
+    col1.markdown(f"<div class='column-content'>{content1}</div>", unsafe_allow_html=True)
+    col2.markdown(f"<div class='column-content'>{content2}</div>", unsafe_allow_html=True)
+    col3.markdown(f"<div class='column-content'>{content3}</div>", unsafe_allow_html=True)
+    col4.markdown(f"<div class='column-content'>{content4}</div>", unsafe_allow_html=True)
 
-        #st.header(option_Zona)
+    # Define the legend with circles
+    legend = "<div style='display:flex; align-items:center;'>" \
+            "<div style='background-color:#f8a359; width:15px; height:15px; border-radius:50%;'></div>" \
+            "<p style='margin:0 5px;'>Caduco</p>" \
+            "<div style='background-color:#fde686; width:15px; height:15px; border-radius:50%;'></div>" \
+            "<p style='margin:0 5px;'>Por Caducar</p>" \
+            "<div style='background-color:#94eba9; width:15px; height:15px; border-radius:50%;'></div>" \
+            "<p style='margin:0 5px;'>Vigente</p>" \
+            "</div>"
 
+    # Render the legend in Streamlit
+    st.markdown(legend, unsafe_allow_html=True)
+    st.markdown('')
 
-    with col2:
-        #st.header("Región")
-        #st.header(option_Region)
-        st.header(f"Región: {option_Region}")
+   # Create a sample DataFrame
+    data = {
+        "Permiso": ["Permiso de uso de suelo", "Registro de marca y derechos de autor"],
+        "Documento cargado": ["Sí", "Sí"],
+        "Contexto": ["Constancia de Alimentos y Numero Oficial Comercial", "Acuse de movimientos de actualización de sitiación"],
+        "Vigencia": ['02 DE MAYO 2019', '29/11/2022'],
+        "Estatus": ["Caduco", "Vigente"]
+    }
 
-    with col3:
-        #st.header("Plaza")
-        #st.header(option_Plaza)
-        st.header(f"Plaza: {option_Plaza}")
+    df = pd.DataFrame(data)
 
-    with col4:
-        #st.header("Tienda")
-        #st.header(option_Tienda)
-        st.header(f"Tienda: {option_Tienda}")
-
-    st.markdown("")
-
-
-    # Verificar si seleccion_dataframe no es None
-    if "Documento cargado" in seleccion_dataframe.columns and len(seleccion_dataframe["Documento cargado"].unique())!=0 :
-            # filtrar Dataframe por elemento cargados
-        if path_tienda is not None and len(path_tienda)!=0:
-            for id,file in enumerate(path_tienda):
-            #Lee los datos del archivo
-                text=Funciones.obtener_texto_fecha(file)
-                #st.write("texto",text)
-                asunto=Funciones.obtener_asunto_imagen(text)
-                Fecha=Funciones.buscar_fechas_palabras_clave(text)
-                seleccion_dataframe['Vigencia'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),Fecha,seleccion_dataframe["Vigencia"])
-                seleccion_dataframe['Contexto'] =np.where((seleccion_dataframe["Permiso"]==Documentos[id]),asunto,seleccion_dataframe["Contexto"])   
-                seleccion_dataframe['Contexto']=seleccion_dataframe['Contexto'].str.replace(r'[^a-zA-Z]', '').str.title()
-                
-        else:
-            st.markdown(st.session_state.seleccion_dataframe_transpuesto.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-        st.session_state.seleccion_dataframe=seleccion_dataframe
-        st.session_state.seleccion_dataframe['Estatus'] =np.where((seleccion_dataframe["Vigencia"]=="02 de mayo 2019"),"Caduco",np.where((seleccion_dataframe["Vigencia"]=="29/11/2022"),"Vigente",None))
-
-        # Transponer el DataFrame
-        st.session_state.seleccion_dataframe_transpuesto = st.session_state.seleccion_dataframe[['Permiso', 'Documento cargado',"Contexto","Vigencia","Estatus"]]
-
-        # Mostrar el DataFrame transpuesto en Streamlit
-        st.markdown(st.session_state.seleccion_dataframe_transpuesto.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+    # Apply conditional formatting to the DataFrame
+    def highlight_status(row):
+        estatus = row['Estatus']
+        background_color = ''
+        if estatus == 'Caduco':
+            background_color = '#f8a359'
+        elif estatus == 'Por Caducar':
+            background_color = '#fde686'
+        elif estatus == 'Vigente':
+            background_color = '#27ae60'
         
-    else:
-        st.header("Sin Documentos para analizar")
-        st.markdown(st.session_state.seleccion_dataframe.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-        #st.dataframe(st.session_state.seleccion_dataframe)
+        return ['background-color: ' + background_color] * len(row)
 
+    styled_df = df.style.apply(highlight_status, axis=1)
 
+    # Apply CSS styling to align values to center
+    styled_df = styled_df.set_table_styles([
+        {"selector": "td", "props": [("text-align", "center")]}
+    ])
+
+    # Display the styled DataFrame in Streamlit
+    #st.markdown(styled_df,unsafe_allow_html=True)
+    col1, col2,col3 = st.columns([0.2,3,0.2])
+    with col1:
+        st.markdown('')
+    with col2:
+        st.markdown(styled_df.hide(axis="index").to_html(), unsafe_allow_html=True)
+    with col3:
+        st.markdown('')
+
+    
+
+st.markdown(
+                        """
+                    <style>
+                    [data-testid="stSidebar"][aria-expanded="true"]{
+                        min-width: 260px;
+                        max-width: 270px;
+                    }
+                    """,
+                        unsafe_allow_html=True,
+                    )
+imageLogoS = Image.open('img/LogoSimple.png')
+st.sidebar.image(imageLogoS,width=10,use_column_width = 'auto')
 st.sidebar.title('Menú')
 if st.sidebar.button('Introducción', key='pagina1', use_container_width=True):
     st.experimental_set_query_params(pagina='1')
